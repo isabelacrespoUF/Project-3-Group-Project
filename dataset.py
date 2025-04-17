@@ -8,8 +8,8 @@ class Node:
 
     def __init__(self, data, maxConnects):
         self.maxConnects = maxConnects
-        if maxConnects < 2:
-            raise "A node should have a maximum of at least two connections"
+        if maxConnects < 4:
+            raise "A node should have a maximum of at least four connections, otherwise it wouldn't intersect"
         self.connectedNodes = []
         self.data = data
 
@@ -19,12 +19,12 @@ class Node:
         :param nextNode: The node which will be connected to the current one
         :param weight: the weight of the edge connecting the node
         """
-        t = (nextNode, weight)
-        if t in self.connectedNodes:
-            return
+        for i in self.connectedNodes:
+            if i[0] == nextNode:
+                return
         if nextNode == self:
-            return
-        if len(self.connectedNodes) > self.maxConnects:
+            raise "Cannot do self loops"
+        if len(self.connectedNodes) >= self.maxConnects:
             return
         if len(nextNode.connectedNodes) >= nextNode.maxConnects:
             return
@@ -53,7 +53,11 @@ class Node:
         return self.connectedNodes
 
     def full(self):
-        if len(self.connectedNodes) == self.maxConnects:
+        """
+        Checks if a function has zero or one remaining connections
+        :return: Boolean. True if yes. False if no.
+        """
+        if len(self.connectedNodes) >= self.maxConnects - 1:
             return True
         else:
             return False
@@ -64,6 +68,7 @@ class data:
     Takes in the noNodes which will be in the dataset and the number of max connections each node will have.
     IMPORTANT: You will need to call the generate function to initialize the dataset.
     """
+
     def __init__(self, noNodes, maxConnects):
         self.arrayOfNodes = []
         self.noNodes = noNodes
@@ -74,23 +79,27 @@ class data:
         self.indexOfStartNode = random.randrange(0, self.noNodes)
         self.startNode = self.arrayOfNodes[self.indexOfStartNode]
 
-    def generate(self):
+    def generate(self): #Generates the dataset
         completed = 1
 
         nt = self.arrayOfNodes.copy()
         t = []
         for i in range(len(self.arrayOfNodes)):
+            if completed >= len(self.arrayOfNodes):
+                break
             total_connections = self.maxConnects - len(self.arrayOfNodes[i].getConnections())
             for j in range(total_connections):
                 if completed >= len(self.arrayOfNodes):
                     break
                 else:
                     if self.arrayOfNodes[completed].full():
+                        completed += 1
                         try:
-                            nt.remove(self.arrayOfNodes[completed])
-                            t.append(self.arrayOfNodes[completed])
+                            nt.remove(self.arrayOfNodes[completed - 1])
+                            t.append(self.arrayOfNodes[completed - 1])
                         except:
                             p = 0
+                        continue
                     self.arrayOfNodes[i].addConnection(self.arrayOfNodes[completed], self.weight)
                     self.weight += 1
                     completed += 1
@@ -100,16 +109,31 @@ class data:
             except:
                 p = 0
 
-            if completed >= len(self.arrayOfNodes):
-                break
             connections = self.arrayOfNodes[i].getConnections()
             if self.maxConnects > 3:
                 for i, w in connections:
-                    for j in range(self.maxConnects - 1 - len(i.getConnections())):
+                    total_connections = self.maxConnects - 1 - len(i.getConnections())
+                    for j in range(total_connections):
                         try:
+                            try:
+                                nt.remove(i)
+                                x = 1
+                            except:
+                                x = 0
                             nodeToBeAdded = nt[random.randrange(0, len(nt))]
+                            if nodeToBeAdded.full():
+                                try:
+                                    nt.remove(nodeToBeAdded)
+                                    t.append(nodeToBeAdded)
+                                    nt.insert(i.data, i)
+                                    continue
+                                except:
+                                    p = 0
+
                         except:
                             break
+                        if x != 0:
+                            nt.insert(i.data, i)
                         i.addConnection(nodeToBeAdded, self.weight)
                         self.weight += 1
                         if nodeToBeAdded.full():
@@ -118,11 +142,6 @@ class data:
                                 t.append(nodeToBeAdded)
                             except:
                                 p = 0
-
-
-
-
-
 
     def setStartNode(self, nodeIndex):
         """
