@@ -25,9 +25,9 @@ class Node:
         if nextNode == self:
             raise "Cannot do self loops"
         if len(self.connectedNodes) >= self.maxConnects:
-            return
+            raise "Cannot add any more edges to the current Node"
         if len(nextNode.connectedNodes) >= nextNode.maxConnects:
-            return
+            raise "Cannot add any more edges to the other Node"
         self.connectedNodes.append((nextNode, weight))
         nextNode.connectedNodes.append((self, weight))
 
@@ -57,7 +57,7 @@ class Node:
         Checks if a function has zero or one remaining connections
         :return: Boolean. True if yes. False if no.
         """
-        if len(self.connectedNodes) >= self.maxConnects - 1:
+        if len(self.connectedNodes) == self.maxConnects:
             return True
         else:
             return False
@@ -85,63 +85,17 @@ class data:
         nt = self.arrayOfNodes.copy()
         t = []
         for i in range(len(self.arrayOfNodes)):
-            if completed >= len(self.arrayOfNodes):
-                break
             total_connections = self.maxConnects - len(self.arrayOfNodes[i].getConnections())
-            for j in range(total_connections):
-                if completed >= len(self.arrayOfNodes):
-                    break
-                else:
-                    if self.arrayOfNodes[completed].full():
-                        completed += 1
-                        try:
-                            nt.remove(self.arrayOfNodes[completed - 1])
-                            t.append(self.arrayOfNodes[completed - 1])
-                        except:
-                            p = 0
-                        continue
-                    self.arrayOfNodes[i].addConnection(self.arrayOfNodes[completed], self.weight)
-                    self.weight += 1
-                    completed += 1
-            try:
+            if total_connections != 0:
                 nt.remove(self.arrayOfNodes[i])
-                t.append(self.arrayOfNodes[completed])
-            except:
-                p = 0
-
-            connections = self.arrayOfNodes[i].getConnections()
-            if self.maxConnects > 3:
-                for i, w in connections:
-                    total_connections = self.maxConnects - 1 - len(i.getConnections())
-                    for j in range(total_connections):
-                        try:
-                            try:
-                                nt.remove(i)
-                                x = 1
-                            except:
-                                x = 0
-                            nodeToBeAdded = nt[random.randrange(0, len(nt))]
-                            if nodeToBeAdded.full():
-                                try:
-                                    nt.remove(nodeToBeAdded)
-                                    t.append(nodeToBeAdded)
-                                    nt.insert(i.data, i)
-                                    continue
-                                except:
-                                    p = 0
-
-                        except:
-                            break
-                        if x != 0:
-                            nt.insert(i.data, i)
-                        i.addConnection(nodeToBeAdded, self.weight)
-                        self.weight += 1
-                        if nodeToBeAdded.full():
-                            try:
-                                nt.remove(nodeToBeAdded)
-                                t.append(nodeToBeAdded)
-                            except:
-                                p = 0
+            for j in range(total_connections):
+                if len(nt) == 0:
+                    break
+                randomNode = nt[random.randrange(0, len(nt))]
+                self.arrayOfNodes[i].addConnection(randomNode, self.weight)
+                self.weight += 1
+                if randomNode.full():
+                    nt.remove(randomNode)
 
     def setStartNode(self, nodeIndex):
         """
