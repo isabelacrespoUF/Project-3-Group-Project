@@ -73,7 +73,7 @@ class data:
         self.arrayOfNodes = []
         self.noNodes = noNodes
         self.maxConnects = maxConnects
-        self.weight = 0
+        self.weight = [i for i in range(noNodes * maxConnects)]
         for i in range(self.noNodes):
             self.arrayOfNodes.append(Node(i, self.maxConnects))
         self.indexOfStartNode = random.randrange(0, self.noNodes)
@@ -91,11 +91,13 @@ class data:
             for j in range(total_connections):
                 if len(nt) == 0:
                     break
-                randomNode = nt[random.randrange(0, len(nt))]
-                self.arrayOfNodes[i].addConnection(randomNode, self.weight)
-                self.weight += 1
-                if randomNode.full():
-                    nt.remove(randomNode)
+                randomNode = random.randrange(0, len(nt))
+                randomWeight = random.randrange(0, len(self.weight))
+
+                self.arrayOfNodes[i].addConnection(nt[randomNode], self.weight[randomWeight])
+                self.weight.pop(randomWeight)
+                if nt[randomNode].full():
+                    nt.pop(randomNode)
 
     def setStartNode(self, nodeIndex):
         """
