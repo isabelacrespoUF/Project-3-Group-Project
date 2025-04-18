@@ -1,13 +1,17 @@
-#CAN CHANGE EVERYTHING IN MAIN
-
+from algorithms import prim, kruskal
 from dataset import data
-
+import time
 maxConnect = 4
-noNodes = 100000
+noNodes = 5
 datastuff = data(noNodes, maxConnect)
 datastuff.generate()
-count = 0
-for i in range(noNodes):
-    if len(datastuff.arrayOfNodes[i].getConnections()) == maxConnect:
-        count += 1
-print(count)
+startTime = time.time()
+primArr = prim(datastuff)
+endTime = time.time()
+primTime = endTime - startTime # display time taken for prim's algorithm in GUI
+
+startTime = time.time()
+kruskalArr = kruskal(datastuff)
+endTime = time.time()
+kruskalTime = endTime - startTime # display time taken for kruskal's algorithm in GUI
+
