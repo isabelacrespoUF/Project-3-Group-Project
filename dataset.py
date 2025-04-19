@@ -9,7 +9,7 @@ class Node:
     def __init__(self, data, maxConnects):
         self.maxConnects = maxConnects
         if maxConnects < 4:
-            raise ValueError("A node should have a maximum of at least four connections, otherwise it wouldn't intersect") 
+            raise "A node should have a maximum of at least four connections, otherwise it wouldn't intersect"
         self.connectedNodes = []
         self.data = data
 
@@ -19,15 +19,16 @@ class Node:
         :param nextNode: The node which will be connected to the current one
         :param weight: the weight of the edge connecting the node
         """
+
+        if nextNode == self:
+            raise "Cannot do self loops"
+        if len(self.connectedNodes) >= self.maxConnects:
+            raise "Cannot add any more edges to the current Node"
+        if len(nextNode.connectedNodes) >= nextNode.maxConnects:
+            raise "Cannot add any more edges to the other Node"
         for i in self.connectedNodes:
             if i[0] == nextNode:
-                return
-        if nextNode == self:
-            raise ValueError("Cannot do self loops")
-        if len(self.connectedNodes) >= self.maxConnects:
-            raise ValueError("Cannot add any more edges to the current Node")
-        if len(nextNode.connectedNodes) >= nextNode.maxConnects:
-            raise ValueError("Cannot add any more edges to the other Node")
+                raise "Error: node already connected"
         self.connectedNodes.append((nextNode, weight))
         nextNode.connectedNodes.append((self, weight))
 
@@ -40,7 +41,7 @@ class Node:
         with the value from weight[0].
         """
         if len(nextNodes) != len(weights):
-            raise ValueError("Error: NextNodes and weights are not the same size")
+            raise "Error: NextNodes and weights are not the same size"
         for i in range(len(nextNodes)):
             self.addConnection(nextNodes[i], weights[i])
 
@@ -79,29 +80,26 @@ class data:
         self.indexOfStartNode = random.randrange(0, self.noNodes)
         self.startNode = self.arrayOfNodes[self.indexOfStartNode]
 
-    def generate(self): #Generates the dataset
-        if self.noNodes <= 0 or self.maxConnects <= 0:
-            raise ValueError("Number of nodes and max connections must be greater than 0.")
-        completed = 1
+    def generate(self):  #Generates the dataset
 
         nt = self.arrayOfNodes.copy()
-        t = []
         for i in range(len(self.arrayOfNodes)):
             total_connections = self.maxConnects - len(self.arrayOfNodes[i].getConnections())
             if total_connections != 0:
                 nt.remove(self.arrayOfNodes[i])
+            l = []
             for j in range(total_connections):
                 if len(nt) == 0:
                     break
                 randomNode = random.randrange(0, len(nt))
                 randomWeight = random.randrange(0, len(self.weight))
-
+                l.append(nt[randomNode])
                 self.arrayOfNodes[i].addConnection(nt[randomNode], self.weight[randomWeight])
                 self.weight.pop(randomWeight)
-                if nt[randomNode].full():
-                    nt.pop(randomNode)
-            
-            
+                nt.pop(randomNode)
+            for i in l:
+                if not i.full():
+                    nt.append(i)
 
     def setStartNode(self, nodeIndex):
         """
