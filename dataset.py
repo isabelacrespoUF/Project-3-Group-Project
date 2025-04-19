@@ -9,7 +9,7 @@ class Node:
     def __init__(self, data, maxConnects):
         self.maxConnects = maxConnects
         if maxConnects < 4:
-            raise "A node should have a maximum of at least four connections, otherwise it wouldn't intersect"
+            raise ValueError("A node should have a maximum of at least four connections, otherwise it wouldn't intersect") 
         self.connectedNodes = []
         self.data = data
 
@@ -23,11 +23,11 @@ class Node:
             if i[0] == nextNode:
                 return
         if nextNode == self:
-            raise "Cannot do self loops"
+            raise ValueError("Cannot do self loops")
         if len(self.connectedNodes) >= self.maxConnects:
-            raise "Cannot add any more edges to the current Node"
+            raise ValueError("Cannot add any more edges to the current Node")
         if len(nextNode.connectedNodes) >= nextNode.maxConnects:
-            raise "Cannot add any more edges to the other Node"
+            raise ValueError("Cannot add any more edges to the other Node")
         self.connectedNodes.append((nextNode, weight))
         nextNode.connectedNodes.append((self, weight))
 
@@ -40,7 +40,7 @@ class Node:
         with the value from weight[0].
         """
         if len(nextNodes) != len(weights):
-            raise "Error: NextNodes and weights are not the same size"
+            raise ValueError("Error: NextNodes and weights are not the same size")
         for i in range(len(nextNodes)):
             self.addConnection(nextNodes[i], weights[i])
 
@@ -80,6 +80,8 @@ class data:
         self.startNode = self.arrayOfNodes[self.indexOfStartNode]
 
     def generate(self): #Generates the dataset
+        if self.noNodes <= 0 or self.maxConnects <= 0:
+            raise ValueError("Number of nodes and max connections must be greater than 0.")
         completed = 1
 
         nt = self.arrayOfNodes.copy()
@@ -98,6 +100,8 @@ class data:
                 self.weight.pop(randomWeight)
                 if nt[randomNode].full():
                     nt.pop(randomNode)
+            
+            
 
     def setStartNode(self, nodeIndex):
         """

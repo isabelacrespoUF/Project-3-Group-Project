@@ -1,3 +1,6 @@
+from PyQt5 import QtWidgets
+import sys
+from gui import MSTGUI
 from algorithms import prim, kruskal
 from dataset import data
 import time
@@ -14,4 +17,11 @@ startTime = time.time()
 kruskalArr = kruskal(datastuff)
 endTime = time.time()
 kruskalTime = endTime - startTime # display time taken for kruskal's algorithm in GUI
+
+
+if __name__ == "__main__":
+    app = QtWidgets.QApplication(sys.argv)
+    window = MSTGUI()
+    window.show()
+    sys.exit(app.exec_())
 

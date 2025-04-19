@@ -2,50 +2,16 @@ from PyQt5 import QtWidgets  # import PyQt5 widgets and for creating the GUI
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas  # import Matplotlib canvas for plotting our graphs in the GUI
 import matplotlib.pyplot as plt  # import for drawing the plots
 import sys 
-
-class CycleTracker: # helps us find nodes that are together and avoid cycles for our MST (Minimum Spanning Tree)
-    def __init__(self, nodes):
-        self.parent = {node: node for node in nodes} # each node starts off by being their own parent with a rank of 0
-        self.rank = {node: 0 for node in nodes}
-    
-    def find(self, node):
-        if self.parent[node] != node:
-            self.parent[node] = self.find(self.parent[node]) # reassignment to root node as path compression is required
-        return self.parent[node] 
-
-    def union(self, node_1, node_2):  # connecting two sets of nodes and joining them into a group
-        root_1 = self.find(node_1)    # we utilize rank to find the new tree parent
-        root_2 = self.find(node_2)
-
-        if root_1 != root_2:
-            if self.rank[root_1] > self.rank[root_2]:
-                self.parent[root_2] = root_1
-            else:
-                self.parent[root_1] = root_2
-                if self.rank[root_1] == self.rank[root_2]:
-                    self.rank[root_2] += 1
-            return True                   # we return true if the nodes were successfully connected and false otherwise due to a possible cycle
-        return False
-    
-def kruskal(graph_nodes, edges): # Kruskal's algorithm to find the minimum spanning tree
-        
-        edges.sort(key = lambda x: x[2]) # utilizing a lambda function in order to sort our edges by weight
-        union_find = CycleTracker({node.data for node in graph_nodes}) #helper function to track our node connections
-        tree_edges = []
-
-        for u,v, weight in edges: # going through each edge and checking if each node is connected and if not, we are able to join them
-            if union_find(u,v):
-                tree_edges.append((u,v, weight))
-        
-        return tree_edges
-
+from algorithms import kruskal
+from dataset import data  # import the data class for generating the graph data
+import random  # import random for generating random weights and positions for the nodes
 class MSTGUI(QtWidgets.QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Minimum Spanning Tree")
         self.layout = QtWidgets.QVBoxLayout(self)
 
-        # Input fields
+        # input fields
         self.node_input = QtWidgets.QLineEdit("")
         self.conn_input = QtWidgets.QLineEdit("")
         self.layout.addWidget(QtWidgets.QLabel("Number of Nodes:"))
@@ -58,14 +24,100 @@ class MSTGUI(QtWidgets.QWidget):
         self.layout.addWidget(self.gen_button)
         self.layout.addWidget(self.calc_button)
 
-        # Plot
+        # plot
         self.figure, self.ax = plt.subplots(figsize=(8, 6))
         self.canvas = FigureCanvas(self.figure)
         self.layout.addWidget(self.canvas)
 
+        # connecting buttons to their respective functions
+        self.gen_button.clicked.connect(self.generate_graph)
+        self.calc_button.clicked.connect(self.calculate_mst)
 
-if __name__ == "__main__":
-    app = QtWidgets.QApplication(sys.argv)
-    window = MSTGUI()
-    window.show()
-    sys.exit(app.exec_())
+    def generate_graph(self):
+        """
+        Generate the graph data and plot it.
+        """
+        if not self.node_input.text() or not self.conn_input.text():
+            QtWidgets.QMessageBox.warning(self, "Warning", "Please fill in all fields.")
+            return
+
+        # Clear previous graph data
+        self.graph_data = None
+
+        try:  # Properly indented under the method
+            num_nodes = int(self.node_input.text())
+            max_connections = int(self.conn_input.text())
+            self.graph_data = data(num_nodes, max_connections)
+            self.graph_data.generate()
+
+            for node in self.graph_data.arrayOfNodes:
+                print(f"Node {node.data} connections: {node.getConnections()}")
+
+            # Clear the plot
+            self.ax.clear()
+            self.ax.set_title("Generated Graph")
+
+            # Generate random positions for nodes
+            node_positions = {}
+            for node in self.graph_data.arrayOfNodes:
+                x, y = random.uniform(0, 10), random.uniform(0, 10)  # Random 2D positions
+                node_positions[node.data] = (x, y)
+                self.ax.plot(x, y, 'o', label=f"Node {node.data}")  # Plot the node
+
+            # Plot the edges
+            for node in self.graph_data.arrayOfNodes:
+                x1, y1 = node_positions[node.data]
+                for connection, weight in node.getConnections():
+                    x2, y2 = node_positions[connection.data]
+                    self.ax.plot([x1, x2], [y1, y2], 'k-', alpha=0.5)  # Plot the edge
+                    # Optionally, display the weight near the edge
+                    mid_x, mid_y = (x1 + x2) / 2, (y1 + y2) / 2
+                    self.ax.text(mid_x, mid_y, str(weight), fontsize=8, color='blue')
+
+            self.ax.legend(loc = "lower left")
+            self.canvas.draw()
+
+        except Exception as e:
+            QtWidgets.QMessageBox.critical(self, "Error", f"Failed to generate graph: {e}")
+
+    def calculate_mst(self):
+
+        if not self.graph_data:
+            QtWidgets.QMessageBox.warning(self, "Warning", "Please first generate a graph.")
+            return
+
+        try:
+            # Debug: Print the graph data
+            print("Graph Nodes and Edges:")
+            for node in self.graph_data.arrayOfNodes:
+                print(f"Node {node.data} connections: {node.getConnections()}")
+
+            # Calculate the MST using Kruskal's algorithm
+            mst = kruskal(self.graph_data)
+
+            print("MST:", mst)
+
+            # Clear the plot
+            self.ax.clear()
+            self.ax.set_title("Minimum Spanning Tree")
+
+            # Generate random positions for nodes (reuse from generate_graph)
+            node_positions = {}
+            for node in self.graph_data.arrayOfNodes:
+                x, y = random.uniform(0, 10), random.uniform(0, 10)  # Random 2D positions
+                node_positions[node.data] = (x, y)
+                self.ax.plot(x, y, 'o', label=f"Node {node.data}")  # Plot the node
+
+            # Plot the MST edges
+            for edge in mst:
+                start_node, end_node, weight = edge
+                x1, y1 = node_positions[start_node]
+                x2, y2 = node_positions[end_node]
+                self.ax.plot([x1, x2], [y1, y2], 'g-', label=f"Edge {start_node}-{end_node} (Weight: {weight})")  # MST edge
+
+            # Add legend
+            self.ax.legend(loc = "lower left")
+            self.canvas.draw()
+
+        except Exception as e:
+            QtWidgets.QMessageBox.critical(self, "Error", f"Failed to calculate MST: {e}")
