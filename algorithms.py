@@ -5,13 +5,13 @@ class CycleTracker: # helps us find nodes that are together and avoid cycles for
         self.parent = {}
         self.rank = {}
         for node in nodes:
-            self.parent[node] = node  # Each node is its own parent
-            self.rank[node] = 0      # Initialize rank to 0
+            self.parent[node] = node  # initialize the parent of each node to itself
+            self.rank[node] = 0     
     
     def find(self, node):
 
-        while self.parent[node] != node:
-            self.parent[node] = self.parent[self.parent[node]]  
+        while self.parent[node] != node: # finding the root out of the tree
+            self.parent[node] = self.parent[self.parent[node]]  # flattening the tree to speed up our find operation
             node = self.parent[node]
         return node 
 
@@ -26,9 +26,10 @@ class CycleTracker: # helps us find nodes that are together and avoid cycles for
                 self.parent[root_1] = root_2
                 if self.rank[root_1] == self.rank[root_2]:
                     self.rank[root_2] += 1
-            print(f"Union: {node_1} and {node_2}")  # Debug
+            print(f"Union: {node_1} and {node_2}")  # code debug statement to check if the union is working accordingly
             return True
-        print(f"Cycle detected: {node_1} and {node_2}")  # Debug
+        print(f"Cycle detected: {node_1} and {node_2}")   # code debug statement to check if the cycle is working accordingly as well
+        # if the nodes are already connected, we return false to avoid cycles
         return False
     
 def prim(spanTree):
@@ -68,7 +69,7 @@ def prim(spanTree):
     """
     return connections
 
-def kruskal(spanTree): # Kruskal's algorithm to find the minimum spanning tree
+def kruskal(spanTree): # kruskal's algorithm to find the minimum spanning tree
         
         graph_nodes ={node.data for node in spanTree.arrayOfNodes} # extracting nodes from spantree object
         edges = []
@@ -77,8 +78,7 @@ def kruskal(spanTree): # Kruskal's algorithm to find the minimum spanning tree
             for connection, weight in node.getConnections(): # going through each node and its connections to find the edges and their weights
                 edges.append((node.data, connection.data, weight)) # appending the edges to a list
 
-        # Debug: Print all edges
-        print("All Edges:", edges)
+        print("Printing all edges:", edges) # code debug statement to check the edges and their weights
 
         edges.sort(key = lambda x: x[2]) # utilizing a lambda function in order to sort our edges by weight
         union_find = CycleTracker(graph_nodes) #helper function to track our node connections
@@ -88,7 +88,6 @@ def kruskal(spanTree): # Kruskal's algorithm to find the minimum spanning tree
             if union_find.union(u,v):
                 tree_edges.append((u,v, weight))
         
-        # Debug: Print the MST
-        print("MST after Kruskal:", tree_edges)
+        print("MST after Kruskal's algorithmn:", tree_edges) # code debug statement to check if kruska'ls algorithmn is working accordingly 
         
         return tree_edges
