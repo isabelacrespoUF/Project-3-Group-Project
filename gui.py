@@ -25,13 +25,19 @@ class MSTGUI(QtWidgets.QWidget):
         self.layout.addWidget(QtWidgets.QLabel("Max Number of Connections:"))
         self.layout.addWidget(self.conn_input)
 
-        # button setp for generating the graph and calculating our mst
+        # button set for generating the graph and calculating our mst
         self.gen_button = QtWidgets.QPushButton("Generate Your Graph")
         self.calc_buttonK = QtWidgets.QPushButton("Calculate MST With Kruskal's Algorithm")
         self.calc_buttonP = QtWidgets.QPushButton("Calculate MST With Prim's Algorithm")
         self.layout.addWidget(self.gen_button)
         self.layout.addWidget(self.calc_buttonK)
         self.layout.addWidget(self.calc_buttonP)
+
+        # labels for displaying algorithm times
+        self.prim_time_label = QtWidgets.QLabel("Prim's Algorithm Time: Not Calculated")
+        self.kruskal_time_label = QtWidgets.QLabel("Kruskal's Algorithm Time: Not Calculated")
+        self.layout.addWidget(self.prim_time_label)
+        self.layout.addWidget(self.kruskal_time_label)
 
         # plotting area
         self.figure, self.ax = plt.subplots(figsize=(8, 6))
@@ -195,3 +201,8 @@ class MSTGUI(QtWidgets.QWidget):
 
         except Exception as e:
             QtWidgets.QMessageBox.critical(self, "Error", f"Failed to calculate MST: {e}")
+
+    def algorithm_times(self, prim_time, kruskal_time):
+
+        self.prim_time_label.setText(f"Prim's Algorithmn Time: {prim_time: .6f} seconds")
+        self.kruskal_time_label.setText(f"Kruskal's Algorithmn Time: {kruskal_time: .6f} seconds")

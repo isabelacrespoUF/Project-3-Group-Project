@@ -22,6 +22,9 @@ kruskalTime = endTime - startTime # display time taken for kruskal's algorithm i
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     window = MSTGUI()
+
+    window.algorithm_times(primTime, kruskalTime) # displaying the time taken for both algorithms in GUI
+
     window.show()
     sys.exit(app.exec_())
 
