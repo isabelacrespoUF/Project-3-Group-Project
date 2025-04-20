@@ -63,6 +63,16 @@ class MSTGUI(QtWidgets.QWidget):
         try:  # obtaining the user input for the number of nodes and max connections
             num_nodes = int(self.node_input.text())
             max_connections = int(self.conn_input.text())
+
+            if num_nodes > 1000:
+                QtWidgets.QMessageBox.warning(self, "The maximum number of nodes that can be displayed is 1000. Graph data will be printed in a new window.")
+                
+                self.graph_data = data(num_nodes, max_connections)
+                self.graph_data.generate()  # generating the graph data using the data class
+
+                self.display_graph_data()  # displaying the graph data in a new window
+                return
+
             self.graph_data = data(num_nodes, max_connections)
             self.graph_data.generate()  # generating the graph data using the data class
 
@@ -103,6 +113,31 @@ class MSTGUI(QtWidgets.QWidget):
             self.canvas.draw()
         except Exception as e:
             QtWidgets.QMessageBox.critical(self, "Error", f"Failed to generate graph: {e}")
+    
+    def display_graph_data(self): # function to display the graph data in a new window if nodes exceed 1000
+        if not self.graph_data:
+            QtWidgets.QMessageBox.warning(self, "Warning", "No graph data to display.")
+            return
+         
+        # creating a new window
+        data_window = QtWidgets.QWidget()
+        data_window.setWindowTitle("Graph Data")
+        data_layout = QtWidgets.QVBoxLayout(data_window)
+
+        data_text = QtWidgets.QTextEdit()
+        data_text.setReadOnly(True)  # making the text box read-only
+
+        graph_data_text = "Graph Nodes and Connections:\n"
+        for node in self.graph_data.arrayOfNodes: # iterating through the nodes and their connections
+            connections = ", ".join([f"{conn.data} (Weight: {weight})" for conn, weight in node.getConnections()])  # getting the connections and their weights
+            graph_data_text += f"Node {node.data}: {connections}\n" 
+        data_text.setText(graph_data_text)
+
+        data_layout.addWidget(data_text)
+        data_window.setLayout(data_layout)
+        data_window.resize(800, 600)
+        data_window.show()
+        
 
     def calculate_mstK(self):
         self.figure.text
