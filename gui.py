@@ -2,7 +2,7 @@ from PyQt5 import QtWidgets  # importing PyQt5 widgets and for creating the GUI
 from matplotlib.backends.backend_qt5agg import \
     FigureCanvasQTAgg as FigureCanvas  # importing Matplotlib canvas for plotting our graphs in the GUI
 import matplotlib.pyplot as plt  # importing for drawing the plots
-from matplotlib.transforms import Bbox  #import Bbox for scrollability
+from matplotlib.transforms import Bbox  # import Bbox for scrollability
 from algorithms import kruskal, prim  # importing kruskal's algorithm for calculating the minimum spanning tree
 from dataset import data  # importing the data class for generating the graph data
 import random  # importing random for generating random weights and positions for the nodes
@@ -44,7 +44,7 @@ class MSTGUI(QtWidgets.QWidget):
         self.canvas = FigureCanvas(self.figure)
         self.layout.addWidget(self.canvas)
 
-        #textbox
+        # textbox
         self.textBox = self.ax.text(0.05, 0.1, "")
 
         # connecting buttons to their respective functions
@@ -65,19 +65,22 @@ class MSTGUI(QtWidgets.QWidget):
             max_connections = int(self.conn_input.text())
 
             if num_nodes > 1000:
-                QtWidgets.QMessageBox.warning(self, "The maximum number of nodes that can be displayed is 1000. Graph data will be printed in a new window.")
-                
+                QtWidgets.QMessageBox.warning(self, "ERROR",
+                                              "The maximum number of nodes that can be displayed is 1000. The output will be printed in the console")
                 self.graph_data = data(num_nodes, max_connections)
                 self.graph_data.generate()  # generating the graph data using the data class
-
-                self.display_graph_data()  # displaying the graph data in a new window
+                prim(self.graph_data)
+                kruskal(self.graph_data)
                 return
-
+            if max_connections > num_nodes - 1:
+                QtWidgets.QMessageBox.warning(self, "ERROR",
+                                              "The maximum number of connections is greater than the number of nodes. Please enter a value below the number of nodes")
+                return
             self.graph_data = data(num_nodes, max_connections)
             self.graph_data.generate()  # generating the graph data using the data class
 
-            for node in self.graph_data.arrayOfNodes:  # code debug statement forprinting the nodes and their connections
-                print(f"Node {node.data} connections: {node.getConnections()}")
+            #for node in self.graph_data.arrayOfNodes:  # code debug statement forprinting the nodes and their connections
+                #print(f"Node {node.data} connections: {node.getConnections()}")
 
             self.ax.clear()  # clearing our previous plot once the button is pressed to generate new data
             self.ax.set_title("Generated Graph")
@@ -99,7 +102,8 @@ class MSTGUI(QtWidgets.QWidget):
                     mid_x, mid_y = (x1 + x2) / 2, (y1 + y2) / 2
                     self.ax.text(mid_x, mid_y, str(weight), fontsize=8, color='blue')
             leg = self.ax.legend(loc="upper right", bbox_to_anchor=(1.02, 0, 0.1, 1))
-
+            self.prim_time_label.setText(f"Prim's Algorithmn Time: Not Calculated")
+            self.kruskal_time_label.setText(f"Kruskal's Algorithmn Time: Not Calculated")
             def scroll_leg(evt):
                 d = {"down": 100, "up": -100}
                 if leg.contains(evt):
@@ -113,12 +117,12 @@ class MSTGUI(QtWidgets.QWidget):
             self.canvas.draw()
         except Exception as e:
             QtWidgets.QMessageBox.critical(self, "Error", f"Failed to generate graph: {e}")
-    
-    def display_graph_data(self): # function to display the graph data in a new window if nodes exceed 1000
+
+    def display_graph_data(self):  # function to display the graph data in a new window if nodes exceed 1000
         if not self.graph_data:
             QtWidgets.QMessageBox.warning(self, "Warning", "No graph data to display.")
             return
-         
+
         # creating a new window
         data_window = QtWidgets.QWidget()
         data_window.setWindowTitle("Graph Data")
@@ -128,16 +132,16 @@ class MSTGUI(QtWidgets.QWidget):
         data_text.setReadOnly(True)  # making the text box read-only
 
         graph_data_text = "Graph Nodes and Connections:\n"
-        for node in self.graph_data.arrayOfNodes: # iterating through the nodes and their connections
-            connections = ", ".join([f"{conn.data} (Weight: {weight})" for conn, weight in node.getConnections()])  # getting the connections and their weights
-            graph_data_text += f"Node {node.data}: {connections}\n" 
+        for node in self.graph_data.arrayOfNodes:  # iterating through the nodes and their connections
+            connections = ", ".join([f"{conn.data} (Weight: {weight})" for conn, weight in
+                                     node.getConnections()])  # getting the connections and their weights
+            graph_data_text += f"Node {node.data}: {connections}\n"
         data_text.setText(graph_data_text)
 
         data_layout.addWidget(data_text)
         data_window.setLayout(data_layout)
         data_window.resize(800, 600)
         data_window.show()
-        
 
     def calculate_mstK(self):
         self.figure.text
@@ -146,11 +150,10 @@ class MSTGUI(QtWidgets.QWidget):
             return
 
         try:
-            print("Graph Nodes and Edges:")
-            for node in self.graph_data.arrayOfNodes:
-                print(f"Node {node.data} connections: {node.getConnections()}")
+            startTime = time.time()
             mst = kruskal(self.graph_data)  # calculating our mst using kruskal's algorithm
-            print("MST:", mst)  # code debug statement for our mst
+            endTime = time.time()
+            #print("MST:", mst)  # code debug statement for our mst
 
             self.ax.clear()
             self.ax.set_title("Minimum Spanning Tree")
@@ -182,6 +185,8 @@ class MSTGUI(QtWidgets.QWidget):
                     legMST.set_bbox_to_anchor(bbox.transformed(tr))
                     self.figure.canvas.draw_idle()
 
+            kruskal_time = endTime - startTime
+            self.kruskal_time_label.setText(f"Kruskal's Algorithmn Time: {kruskal_time: .6f} seconds")
             self.figure.canvas.mpl_connect("scroll_event", scroll_leg)
             self.canvas.draw()
 
@@ -194,11 +199,10 @@ class MSTGUI(QtWidgets.QWidget):
             return
 
         try:
-            print("Graph Nodes and Edges:")
-            for node in self.graph_data.arrayOfNodes:
-                print(f"Node {node.data} connections: {node.getConnections()}")
+            startTime = time.time()
             mst = prim(self.graph_data)  # calculating our mst using prim's algorithm
-            print("MST:", mst)  # code debug statement for our mst
+            endTime = time.time()
+            #print("MST:", mst)  # code debug statement for our mst
 
             self.ax.clear()
             self.ax.set_title("Minimum Spanning Tree")
@@ -230,7 +234,8 @@ class MSTGUI(QtWidgets.QWidget):
                     tr = legMST.axes.transAxes.inverted()
                     legMST.set_bbox_to_anchor(bbox.transformed(tr))
                     self.figure.canvas.draw_idle()
-
+            prim_time = endTime - startTime
+            self.prim_time_label.setText(f"Prim's Algorithmn Time: {prim_time: .6f} seconds")
             self.figure.canvas.mpl_connect("scroll_event", scroll_leg)
             self.canvas.draw()
 
