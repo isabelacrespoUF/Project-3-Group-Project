@@ -6,10 +6,8 @@ class CycleTracker:  # helps us find nodes that are together and avoid cycles fo
             self.parent[node] = node  # initialize the parent of each node to itself
             self.rank[node] = 0
 
-    def find(self, node):
-
-        while self.parent[node] != node:  # finding the root out of the tree
-            self.parent[node] = self.parent[self.parent[node]]  # flattening the tree to speed up our find operation
+    def find(self, node): # finding the root of the tree for a given node
+        while self.parent[node] != node:  # while the parent of the node is not itself, we keep going up the tree
             node = self.parent[node]
         return node
 
